@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Webcam Stream</title>
+</head>
+
+<body>
+  <h1>Webcam Stream</h1>
+  <div id="content"></div>
+  <video id="webcamStream" autoplay></video>
+  <canvas id="captureCanvas" width="644" height="548" style="display: none;"></canvas>
+
+  <script>
+    const webcamStream = document.getElementById('webcamStream');
+    const captureCanvas = document.getElementById('captureCanvas');
+    const captureContext = captureCanvas.getContext('2d');
+    const contentDiv = document.getElementById('content');
+
+    // 웹캠 스트림 표시를 위한 미디어 장치 요청
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        webcamStream.srcObject = stream;
+
+        // 1초마다 캡쳐하고 서버에 업로드
+        setInterval(() => {
+          captureContext.drawImage(webcamStream, 0, 0, captureCanvas.width, captureCanvas.height);
+          const imageData = captureCanvas.toDataURL('image/png');
+
+          // 서버로 업로드
+          fetch('/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ image: imageData })
+          })
+            .then((response) => {
+              if (response.ok) {
+                console.log('Image uploaded successfully.');
+              } else {
+                console.error('Failed to upload the image.');
+              }
+            })
+            .catch((error) => {
+              console.error('Error uploading the image:', error);
+            });
+        }, 100);
+      })
+      .catch((error) => {
+        console.error('Error accessing webcam:', error);
+      });
+
+    function updateContent() {
+      fetch('/textfile') // 서버에서 텍스트 파일의 내용을 가져오는 API 호출
+        .then(response => response.text())
+        .then(content => {
+          contentDiv.innerHTML = content; // 내용을 div에 업데이트
+        });
+    }
+
+    setInterval(updateContent, 1000); // 1초마다 업데이트 실행
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,3 @@
+0 helmet_on
+1 helmet_off
+2 blank
