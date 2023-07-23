@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Webcam Stream</title>
+</head>
+
+<body>
+  <h1>Webcam Stream</h1>
+  <div id="content"></div>
+  <video id="webcamStream" autoplay></video>
+  <canvas id="captureCanvas" width="644" height="548" style="display: none;"></canvas>
+  <button id="startBtn">마이크 시작</button>
+  <div id="output"></div>
+
+  <script>
+    const webcamStream = document.getElementById('webcamStream');
+    const captureCanvas = document.getElementById('captureCanvas');
+    const captureContext = captureCanvas.getContext('2d');
+    const contentDiv = document.getElementById('content');
+    const startBtn = document.getElementById('startBtn');
+    const outputDiv = document.getElementById('output');
+
+
+    // 웹캠 스트림 표시를 위한 미디어 장치 요청
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        webcamStream.srcObject = stream;
+
+        // 1초마다 캡쳐하고 서버에 업로드
+        setInterval(() => {
+          captureContext.drawImage(webcamStream, 0, 0, captureCanvas.width, captureCanvas.height);
+          const imageData = captureCanvas.toDataURL('image/png');
+
+          // 서버로 업로드
+          fetch('/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ image: imageData })
+          })
+            .then((response) => {
+              if (response.ok) {
+                console.log('Image uploaded successfully.');
+              } else {
+                console.error('Failed to upload the image.');
+              }
+            })
+            .catch((error) => {
+              console.error('Error uploading the image:', error);
+            });
+        }, 100);
+      })
+      .catch((error) => {
+        console.error('Error accessing webcam:', error);
+      });
+
+    function updateContent() {
+      fetch('/textfile') // 서버에서 텍스트 파일의 내용을 가져오는 API 호출
+        .then(response => response.text())
+        .then(content => {
+          contentDiv.innerHTML = content; // 내용을 div에 업데이트
+        });
+    }
+
+    setInterval(updateContent, 1000); // 1초마다 업데이트 실행
+
+
+    // 웹 브라우저가 Web Speech API를 지원하는지 확인
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new webkitSpeechRecognition();
+
+      // 인식이 시작되었을 때 실행되는 이벤트 핸들러
+      recognition.onstart = () => {
+        outputDiv.innerHTML = '말을 하세요...';
+      };
+
+      // 인식이 종료되었을 때 실행되는 이벤트 핸들러
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        outputDiv.innerHTML = '인식된 텍스트: ' + transcript;
+
+        // 서버로 인식된 텍스트를 보내기 위해 Fetch API 사용
+        fetch('/send_data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text: transcript })
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log('서버 응답:', data);
+          })
+          .catch(error => {
+            console.error('오류 발생:', error);
+          });
+      };
+
+      // 마이크 시작 버튼 클릭 시 실행되는 이벤트 핸들러
+      startBtn.addEventListener('click', () => {
+        recognition.start();
+      });
+    } else {
+      // Web Speech API를 지원하지 않는 경우에 대한 처리
+      outputDiv.innerHTML = '죄송합니다. 웹 브라우저가 Web Speech API를 지원하지 않습니다.';
+    }
+
+  </script>
+</body>
+
+</html>

@@ -70,5 +70,16 @@ def predict():
     else:
         return jsonify({'msg_helmet': 'Invalid image_path.'})
 
+@app.route('/send_data', methods=['POST'])
+def receive_data():
+    data = request.get_json()
+    received_text = data.get('text')
+
+    # 받은 텍스트를 원하는 방식으로 처리하고 응답
+    # 여기서는 단순히 받은 텍스트를 그대로 응답하는 예시를 보여줍니다.
+    response_data = {'message': '입력을 받았습니다.', 'received_text': received_text}
+    print(response_data)
+    return jsonify(response_data)
+
 if __name__ == '__main__':
     app.run(host='localhost', port=5000)

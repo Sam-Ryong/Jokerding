@@ -17,6 +17,7 @@
     const captureContext = captureCanvas.getContext('2d');
     const contentDiv = document.getElementById('content');
 
+
     // 웹캠 스트림 표시를 위한 미디어 장치 요청
     navigator.mediaDevices.getUserMedia({ video: true })
       .then((stream) => {
@@ -60,6 +61,8 @@
     }
 
     setInterval(updateContent, 1000); // 1초마다 업데이트 실행
+
+
   </script>
 </body>
 
