@@ -2,17 +2,13 @@
 FROM node:14
 
 # 작업 디렉토리를 설정합니다.
-WORKDIR /app
+WORKDIR /
 
-# Node.js 서버에 필요한 파일을 복사합니다.
-COPY node-app/package*.json ./
+# 소스 코드를 복사합니다.
+COPY . .
+
+# npm 패키지를 설치합니다.
 RUN npm install
-COPY node-app/ ./
 
-# Flask 서버에 필요한 파일을 복사합니다.
-COPY flask-app/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-COPY flask-app/ ./
-
-# 동시에 Node.js 서버와 Flask 서버를 실행합니다.
-CMD ["sh", "-c", "npm start & python app.py"]
+# Node.js 서버를 실행합니다.
+CMD ["node", "main_dev.js"]

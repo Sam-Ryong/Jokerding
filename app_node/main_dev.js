@@ -3,6 +3,11 @@ const app = express();
 const fs = require('fs');
 const axios = require('axios');
 const bodyParser = require('body-parser');
+// const https = require("https");
+// const options = {
+//   key: fs.readFileSync("config/server.key"),
+//   cert: fs.readFileSync("config/server.crt"),
+// };
 
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
@@ -52,7 +57,7 @@ app.post('/upload', async (req, res) => {
     
     })
   } catch (error) {
-    console.error('Error while sending request to Python server:', error);
+    console.error('Error while sending request to Python server:');
     res.status(500).send('Error while sending request to Python server');
   }
   });
@@ -60,3 +65,7 @@ app.post('/upload', async (req, res) => {
 app.listen(3000, () => {
   console.log('Server is running on http://localhost:3000');
 });
+
+// https.createServer(options, app).listen(3000, () => {
+//   console.log(`HTTPS server started on port 3000`);
+// });
